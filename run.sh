@@ -3,6 +3,7 @@ minX=1
 minY=1
 maxX=$(tput cols)
 maxY=$(tput lines)
+((maxY++))
 
 # Some consts
 timeOutTime=0.03
@@ -12,7 +13,7 @@ run=1
 dinoModel=''
 dinoModel+='   BBBB.'
 dinoModel+=' BBBBBBBBBB.'
-dinoModel+=' CCCDDCD .'
+dinoModel+=' CCCDDCD.'
 dinoModel+='CDCDDDCDDDD.'
 dinoModel+='CDCCDDDCDDDD.'
 dinoModel+='CCDDDDCCCC.'
@@ -28,19 +29,21 @@ main(){
 	tput civis -- invisible
 	tput setab $background
 	tput clear
-
+	
 	dinoW=11
 	dinoH=7
-	dinoX=10
-	dinoY=$((maxY-dinoH))
-		prevDinoY=$dinoY
-	dinoVy=0
-	dinoJumpLimit=$((2*maxY/3))
-
+	upY=$((1*maxY/8))
+	# downY=$((maxY-dinoH))
+	downY=$((maxY-dinoH-1*maxY/8))	
+	midY=$(((upY+downY)/2))
+	dinoX=5
+	dinoY=$downY
+	prevDinoY=$dinoY
+	
 	obstacleX=$((maxX-10))
 	prevObstacleX=$obstacleX
 	obstacleY=$((maxY-3))
-	drawModel $dinoX $dinoY "$dinoModel"
+	drawModel $dinoX $downY "$dinoModel"
 	while test $run -eq 1; do
 		getChar $timeOutTime
 		if [[ "$charGot" != "" ]]; then
@@ -52,29 +55,20 @@ main(){
 				break
 				;;
 			"w")
-				if ((dinoVy == 0)); then
-					dinoVy=-5
-					updateModel $dinoX $dinoJumpLimit $dinoX $dinoY "$dinoModel"
+				if ((dinoY > midY)); then
+					updateModel $dinoX $upY $dinoX $dinoY "$dinoModel"
+					# updateModelOld $dinoX $upY $dinoX $dinoY "$dinoModel"
+					dinoY=$upY
 				fi
 				;;
 			"s")
+				if ((dinoY < midY)); then
+					updateModel $dinoX $downY $dinoX $dinoY "$dinoModel"
+					# updateModelOld $dinoX $downY $dinoX $dinoY "$dinoModel"
+					dinoY=$downY
+				fi
 				;;
 		esac
-		prevDinoY=$dinoY
-		((dinoY+=dinoVy))
-		if ((dinoY+dinoH > maxY)); then
-			((dinoY-=dinoVy))
-			dinoVy=0
-			updateModel $dinoX $dinoY $dinoX $dinoJumpLimit "$dinoModel"
-		fi
-		if ((dinoY<dinoJumpLimit)); then
-			((dinoY+=dinoVy))
-			dinoVy=5
-		fi
-		# if test $dinoVy -ne 0; then
-		# 	updateModel $dinoX $dinoY $dinoX $prevDinoY "$dinoModel"
-		# fi
-		# updateSolidRect $obstacleX $obstacleY $prevObstacleX $obstacleY 2 3 1
 		prevObstacleX=$obstacleX
 		((obstacleX-=2))
 		if (( obstacleX <= 5 )); then
@@ -96,12 +90,13 @@ getChar(){
 
 # drawModel x y model
 # Draws model model
-drawModel(){
+drawModelOld(){
 	x=$1
 	xi=$x
 	yi=$2
 	model=$3
 	buff=""
+	data=""
 	for ((i=0; i<${#model}; i++)); do
 		color="${model:$i:1}"
 		if [[ "$color" == "." ]]; then
@@ -115,16 +110,40 @@ drawModel(){
 			intColor $color
 			tput setab $?
 			echo -ne "\033[$yi;"$xi"f "
-			wait
 			((xi++))
 		fi
 	done 
 	tput setab $background
 }
+drawModel(){
+	x=$1
+	yi=$2
+	model=$3
+	buff=""
+	data=""
+	for ((i=0; i<${#model}; i++)); do
+		color="${model:$i:1}"
+		if [[ "$color" == "." ]]; then
+			buff+="\e[$yi;"$x"f$data"
+			((yi++))
+			data=""
+		else
+			if [[ "$color" == " " ]]; then
+				data+="\e[48;5;$background""m "
+				continue
+			fi
+			intColor $color
+			backColor=$?
+			data+="\e[48;5;$backColor""m "
+		fi
+	done 
+	buff+="\e[48;5;$background""m"
+	echo -en "$buff"
+}
 
 # eraseModel x y model
 # Replaces pixels of model with background color
-eraseModel(){
+eraseModelOld(){
 	model=$3
 	newModel=''
 	for ((i=0; i<${#model}; ++i)); do
@@ -136,6 +155,24 @@ eraseModel(){
 		fi
 	done 
 	drawModel $1 $2 "$newModel"
+}
+eraseModel(){
+	x=$1
+	yi=$2
+	model=$3
+	buff=""
+	spaces=""
+	for ((i=0; i<${#model}; i++)); do
+		if [[ "${model:$i:1}" == "." ]]; then
+			buff+="\e[$yi;"$x"f\e[48;5;"$background"m$spaces"		
+			((yi++))
+			spaces=""			
+		else
+			spaces+=" "
+		fi
+	done
+	buff+="\e[48;5;$background""m"	
+	echo -ne "$buff"
 }
 
 # solidRect x y width height color
@@ -167,14 +204,13 @@ intColor(){
 
 # updateModel x- y prevx prevy model
 # Erases previous model and draws new one
+updateModelOld(){
+	eraseModelOld $3 $4 "$5"
+	drawModelOld $1 $2 "$5"
+}
 updateModel(){
-	# Todo Fix this bug
-	log "Started erase" $2
 	eraseModel $3 $4 "$5"
-	log "Finished erase" $2
-	log "Started draw" $2
 	drawModel $1 $2 "$5"
-	log "Finished draw" $2
 }
 
 # updateSolidRect x y prevx prevy width height color
