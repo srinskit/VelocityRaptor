@@ -39,11 +39,15 @@ main(){
 	dinoX=5
 	dinoY=$downY
 	prevDinoY=$dinoY
-	
+	dinoUy=0
+	realDinoY=$downY
+	halfG=5
+	t=0
+
 	obstacleX=$((maxX-10))
 	prevObstacleX=$obstacleX
 	obstacleY=$((maxY-3))
-	drawModel $dinoX $downY "$dinoModel"
+	drawModel $dinoX $dinoY "$dinoModel"
 	while test $run -eq 1; do
 		getChar $timeOutTime
 		if [[ "$charGot" != "" ]]; then
@@ -57,18 +61,37 @@ main(){
 			"w")
 				if ((dinoY > midY)); then
 					updateModel $dinoX $upY $dinoX $dinoY "$dinoModel"
-					# updateModelOld $dinoX $upY $dinoX $dinoY "$dinoModel"
 					dinoY=$upY
 				fi
+				# dinoUy=-7
 				;;
 			"s")
 				if ((dinoY < midY)); then
 					updateModel $dinoX $downY $dinoX $dinoY "$dinoModel"
-					# updateModelOld $dinoX $downY $dinoX $dinoY "$dinoModel"
 					dinoY=$downY
 				fi
 				;;
 		esac
+		
+		# Falling animation?
+		# prevDinoY=$dinoY
+		# if ((dinoUy!=0)); then
+		# 	realDinoY=$(bc <<< "$realDinoY + $dinoUy*$t+$halfG*$t*$t")
+		# 	dinoY=$(bc <<< "$realDinoY/1")
+		# 	t=$(bc <<< "$t+0.15")
+		# 	if ((dinoY > downY)); then
+		# 		dinoY=$downY
+		# 		realDinoY=$downY
+		# 		t=0
+		# 		dinoUy=0				
+		# 	fi
+		# 	if ((prevDinoY!=dinoY)); then
+		# 		# tput clear &
+		# 		updateModel $dinoX $dinoY $dinoX $prevDinoY "$dinoModel"
+		# 		# drawModel $dinoX $dinoY "$dinoModel"
+		# 	fi
+		# fi
+
 		prevObstacleX=$obstacleX
 		((obstacleX-=2))
 		if (( obstacleX <= 5 )); then
@@ -219,7 +242,6 @@ updateSolidRect(){
 	solidRect $3 $4 $5 $6 $background
 	solidRect $1 $2 $5 $6 $7
 }
-
 
 # log into log file
 log(){
