@@ -1,6 +1,22 @@
+#!/bin/bash
+# Includes
+. drawers.sh
+. models.sh
+. queue.sh
+
+# Limits of terminal
+minX=1
+minY=1
+maxX=$(tput cols)
+maxY=$(tput lines)
+
+# Some consts
+timeOutTime=0.03
+run=1
+
+# Logic
 main(){
-	cols=$(tput cols)
-	lines=$(tput lines)
+	# Setup terminal settings
 	backgroundLetter=Q
 	intColor $backgroundLetter
 	background=$?
@@ -8,153 +24,174 @@ main(){
 	tput civis -- invisible
 	tput setab $background
 	tput clear
-	ybounding=15
-	run=1
-	ox=70
-	pox=70
-	yox=22
-	yp=20
-	pyp=20
-	vy=0
-	pox1=30
-	ox1=30
-	yox1=10
-	model=''
-	model+='     B    .'
-	model+='    B B   .'
-	model+='   BBBBB  .'
-	model+='  B BBB B .'
-	model+='     B    .'
+	
+	# Border
+	for((i=0;i<maxX;++i)); do
+		buff+="#"
+	done
+	echo -en "\e[0;0f$buff\e[$maxY;0f$buff"
+	
+	# Obstacle attributes
+	obstacleW=$((maxX/10))
+	obstacleH=$((obstacleW/2))
+	upperObstacleX=$((maxX-obstacleW))
+	pUpperObstacleX=$upperObstacleX
+	upperObstacleY=$((maxY/4-obstacleH/2))
+	lowerObstacleX=$((maxX-obstacleW-maxX/2))
+	lowerObstacleY=$((3*maxY/4-obstacleH/2))	
+	pLowerObstacleX=$lowerObstacleX
+
+	
+
+	# Raptor attributes; Width, Height, etc
+	dinoW=7
+	dinoH=5
+	# Raptor upperlimit, lowerLimit 
+	upY=$((1*maxY/8))
+	downY=$((maxY-dinoH-1*maxY/8))
+	midY=$(((upY+downY)/2))
+	dinoX=$obstacleW
+	dinoY=$downY
+	pDinoY=$dinoY
+	dinoUy=0
+	
+	# realDinoY=$downY
+	# halfG=5
+	# t=0
+
+	
+	randomColor
+	lowerObstacleColor=$?
+	randomColor	
+	upperObstacleColor=$?
+	# renderQueuer &
+	# renderQueuerPid=$?
+	score=0
+	level=1
+	drawModel $dinoX $dinoY "$rocketModelV"
 	while test $run -eq 1; do
-		sleep 0.01
-		getChar
+		getChar $timeOutTime
+		if [[ "$charGot" != "" ]]; then
+			sleep $timeOutTime
+		fi
 		case "$charGot" in 
 			"q")
 				run=0
-				break;;
+				;;
 			"w")
-				vy=-2
-				# moveUp 
+				if ((dinoY >= upY)); then
+					((dinoUy=-2))
+					# ((score+=5))
+				fi
 				;;
 			"s")
-				# moveDown 
 				;;
 		esac
-		if test $yp -ne $pyp; then
-			eraseModel 20 $pyp "$model"	
+		pDinoY=$dinoY
+		((dinoY+=dinoUy))
+		if ((dinoY > downY)); then
+			dinoY=$downY		
+			dinoUy=0
 		fi
-		drawModel 20 $yp "$model"
-		pyp=$yp
-		((yp+=vy))
-		if (($yp >= 19)); then
-			vy=0
+		if ((dinoY < upY)); then
+			dinoY=$upY
+			dinoUy=2
 		fi
-		if (($yp <= 10)); then
-			vy=2
+		if ((pDinoY!=dinoY)); then
+			# updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV" 
+			updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV" &		
 		fi
-		#Lower obstacle
-		solidRect $pox $yox 2 3 $background
-		solidRect $ox $yox 2 3 2
-		pox=$ox
-		((ox-=2))
-		if (( ox <= 5 )); then
-			ox=70
+		
+		updateSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH $lowerObstacleColor
+		# updateSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH 2 &				
+		pLowerObstacleX=$lowerObstacleX
+		if [ $score -eq 10 ]
+		then 
+		((level+=1))
+		((score+=1))
 		fi
-		#introducing an upper obstacle to avoid user floating in air
-		solidRect $pox1 $yox1 2 3 $background
-		solidRect $ox1 $yox1 2 3 2
-		pox1=$ox1
-		((ox1-=2))
-		if((ox1<=5))
-		then
-		ox1=70
+		((lowerObstacleX-=1+level))
+		if (( lowerObstacleX <= 0 )); then
+			lowerObstacleX=$((maxX-obstacleW))
+			randomColor
+			lowerObstacleColor=$?
 		fi
-		done
+
+		updateSolidRect $upperObstacleX $upperObstacleY $pUpperObstacleX $upperObstacleY $obstacleW $obstacleH $upperObstacleColor	
+		# updateSolidRect $upperObstacleX $upperObstacleY $pUpperObstacleX $upperObstacleY $obstacleW $obstacleH 2 &
+		pUpperObstacleX=$upperObstacleX
+		((upperObstacleX-=1+level))
+		if (( upperObstacleX <= 0 )); then
+			upperObstacleX=$((maxX-obstacleW))
+			randomColor
+			upperObstacleColor=$?
+		fi
+		((x=dinoX+dinoW))
+		((y=lowerObstacleX+1))
+		((z=$lowerObstacleX+$obstacleW))
+		if [ $x -gt $y ] && [ $dinoY -gt $lowerObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -gt $lowerObstacleY ];then
+			# echo $dinoX $dinoW $lowerObstacleX
+			run=0
+		fi
+		((y1=upperObstacleX+1))
+		((z=$upperObstacleX+$obstacleW+1))
+		if [ $x -gt $y1 ] && [ $dinoY -lt $upperObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -lt $upperObstacleY ];then
+			# echo $dinoX $dinoW $lowerObstacleX
+			run=0
+		fi
+	done
+	# kill $renderQueuerPid
 	tput cnorm -- normal
 	stty sane
 }
 
+# getChar timeout
+# Saves key in charGot; Blocks for timeout amount of time
 charGot=''
 getChar(){
 	charGot=''
-	IFS= read -r -t 0.02 -n 1 -s holder && charGot="$holder"
-	#changes mase in to fix the issue 1 to allow continous pressing of 'w'
-	# if test $yp -le 10
-	# then
-	# charGot=''
-	# fi
-}
-moveUp(){
-	solidRect 10 18 3 5 $background
-	solidRect 10 10 3 5 2
-	# sleep 1
-}
-moveDown(){
-	solidRect 10 10 3 5 $background
-	solidRect 10 18 3 5 2
+	IFS= read -r -t $1 -n 1 -s holder && charGot="$holder"
 }
 
-drawModel(){
-	x=$1
-	xi=$x
-	yi=$2
-	str=$3
-	buff=""
-	for ((i=0; i<${#str}; i++)); do
-		color="${str:$i:1}"
-		if [[ "$color" == "." ]]; then
-			((yi++))
-			((xi=x))
-		else
-			if [[ "$color" == " " ]]; then
-				((xi++))
-				continue
-			fi
-			intColor $color
-			tput setab $?
-			buff+="\033[$yi;"$xi"f "
-			((xi++))
-		fi
-		echo -ne "$buff"
-	done
-	tput setab $background
+# log into log file
+log(){
+	cat >> log <<< "$@"
 }
 
-eraseModel(){
-	str=$3
-	newStr=''
-	for ((i=0; i<${#str}; ++i)); do
-		color="${str:$i:1}"
-		if [[ "$color" == "." ]] || [[ "$color" == " " ]]; then
-			newStr+=$color
-		else
-			newStr+=$backgroundLetter
+renderQueuer(){
+	while true; do
+		qEmpty
+		if [ $? -eq 0 ]; then
+			qPop
+			echo $qPopped
 		fi
 	done
-	drawModel $1 $2 "$newStr"
-}
-
-solidRect(){
-	x=$1
-	y=$2
-	w=$3
-	h=$4
-	color=$5
-	tput setab $color
-	space=""
-	for ((i=0;i<w;++i)); do
-		space+="  "
-	done
-	buff=""
-	for ((i=y;i<h+y;++i));do
-		buff+="\033[$i;"$x"f$space"
-	done
-	echo -ne "$buff"
-	tput setab $background	
-}
-
-intColor(){
-	return $(($(printf '%d' "'$1")-65))
 }
 
 main
+
+# if ((dinoY < midY)); then
+# 	updateModel $dinoX $downY $dinoX $dinoY "$rocketModelV"
+# 	dinoY=$downY
+# fi
+# if ((dinoY > midY)); then
+# 	updateModel $dinoX $upY $dinoX $dinoY "$rocketModelV"
+# 	dinoY=$upY
+# fi
+# if ((dinoUy!=0)); then
+# 	realDinoY=$(bc <<< "$realDinoY + $dinoUy*$t+$halfG*$t*$t")
+# 	dinoY=$(bc <<< "$realDinoY/1")
+# 	t=$(bc <<< "$t+0.15")
+# 	if ((dinoY > downY)); then
+# 		dinoY=$downY
+# 		realDinoY=$downY
+# 		t=0
+# 		dinoUy=0					
+# 	fi
+# 	if ((pDinoY!=dinoY)); then
+# 		tput clear
+# 		# updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV" 
+# 		sleep 0.005
+# 		drawModel $dinoX $dinoY "$rocketModelV"
+# 	fi
+# fi

@@ -7,7 +7,6 @@
 # Some consts
 timeOutTime=0.03
 run=1
-
 # Logic
 main(){
 	# Setup terminal settings
@@ -19,16 +18,16 @@ main(){
 	tput setab $background
 	tput clear
 	
-	# Border
-	for((i=0;i<maxX;++i)); do
-		buff+="#"
-	done
-	echo -en "\e[0;0f$buff\e[$maxY;0f$buff"
+	# # Border
+	# for((i=0;i<maxX;++i)); do
+	# 	buff+="#"
+	# done
+	# echo -en "\e[0;0f$buff\e[$maxY;0f$buff"
 	
 	# Obstacle attributes
 	obstacleW=$((maxX/10))
 	obstacleH=$((obstacleW/2))
-	upperObstacleX=$((maxX))
+	upperObstacleX=$((maxX/2))
 	pUpperObstacleX=$upperObstacleX
 	upperObstacleY=$((maxY/4-obstacleH/2))
 	lowerObstacleX=$((maxX))	
@@ -60,7 +59,23 @@ main(){
 	upperObstacleColor=$?
 	# renderQueuer &
 	# renderQueuerPid=$?
+	score=-1
+	level=0
+	obstacleV=$((level+2))
+	displayScore(){
+		((score++))
+		if ((score%5==0)); then		
+			((level++))
+			obstacleV=$((level+2))			
+		fi
+		x=$((maxX/2))
+		y=$((maxY-2))
+		echo -ne "\e[$((y-1));"$x"fLevel : $level"		
+		echo -ne "\e[$y;"$x"fScore : $score"
+	}
+	
 	drawModel $dinoX $dinoY "$rocketModelV"
+	displayScore
 	while test $run -eq 1; do
 		getChar $timeOutTime
 		if [[ "$charGot" != "" ]]; then
@@ -90,27 +105,42 @@ main(){
 		fi
 		if ((pDinoY!=dinoY)); then
 			# updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV" 
-			updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV" &		
+			updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV"
 		fi
 		
-		updateSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH $lowerObstacleColor
+		moveLeftSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH $lowerObstacleColor
 		# updateSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH 2 &				
 		pLowerObstacleX=$lowerObstacleX
-		((lowerObstacleX-=2))
-		if (( lowerObstacleX < -obstacleW-2)); then
+		((lowerObstacleX-=obstacleV))
+		if (( lowerObstacleX < -obstacleW-obstacleV)); then
 			lowerObstacleX=$((maxX))
 			randomColor
 			lowerObstacleColor=$?
+			displayScore			
 		fi
 
 		moveLeftSolidRect $upperObstacleX $upperObstacleY $pUpperObstacleX $upperObstacleY $obstacleW $obstacleH $upperObstacleColor	
 		# updateSolidRect $upperObstacleX $upperObstacleY $pUpperObstacleX $upperObstacleY $obstacleW $obstacleH 2 &
 		pUpperObstacleX=$upperObstacleX
-		((upperObstacleX-=2))
-		if (( upperObstacleX < -obstacleW-2)); then
+		((upperObstacleX-=obstacleV))
+		if (( upperObstacleX < -obstacleW-obstacleV)); then
 			upperObstacleX=$((maxX))
 			randomColor
 			upperObstacleColor=$?
+			displayScore						
+		fi
+		((x=dinoX+dinoW))
+		((y=lowerObstacleX+1))
+		((z=$lowerObstacleX+$obstacleW))
+		if [ $x -gt $y ] && [ $dinoY -gt $lowerObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -gt $lowerObstacleY ];then
+			# echo $dinoX $dinoW $lowerObstacleX
+			run=0
+		fi
+		((y1=upperObstacleX+1))
+		((z=$upperObstacleX+$obstacleW+1))
+		if [ $x -gt $y1 ] && [ $dinoY -lt $upperObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -lt $upperObstacleY ];then
+			# echo $dinoX $dinoW $lowerObstacleX
+			run=0
 		fi
 	done
 	# kill $renderQueuerPid

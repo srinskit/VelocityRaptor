@@ -78,14 +78,14 @@ eraseModel(){
 	spaces=""
 	for ((i=0; i<${#model}; i++)); do
 		if [[ "${model:$i:1}" == "." ]]; then
-			buff+="\e[$yi;"$x"f\e[48;5;"$background"m$spaces"		
+			buff+="\e[$yi;"$x"f\e[48;5;"$background"m$spaces"
 			((yi++))
 			spaces=""			
 		else
 			spaces+=" "
 		fi
 	done
-	buff+="\e[48;5;$background""m"	
+	# buff+="\e[48;5;$background""m"	
 	echo -ne "$buff"
 }
 
