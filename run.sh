@@ -3,13 +3,7 @@
 . drawers.sh
 . models.sh
 . queue.sh
-
-# Limits of terminal
-minX=1
-minY=1
-maxX=$(tput cols)
-maxY=$(tput lines)
-
+	
 # Some consts
 timeOutTime=0.03
 run=1
@@ -34,10 +28,10 @@ main(){
 	# Obstacle attributes
 	obstacleW=$((maxX/10))
 	obstacleH=$((obstacleW/2))
-	upperObstacleX=$((maxX-obstacleW))
+	upperObstacleX=$((maxX))
 	pUpperObstacleX=$upperObstacleX
 	upperObstacleY=$((maxY/4-obstacleH/2))
-	lowerObstacleX=$((maxX-obstacleW-maxX/2))
+	lowerObstacleX=$((maxX))	
 	lowerObstacleY=$((3*maxY/4-obstacleH/2))	
 	pLowerObstacleX=$lowerObstacleX
 
@@ -103,18 +97,18 @@ main(){
 		# updateSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH 2 &				
 		pLowerObstacleX=$lowerObstacleX
 		((lowerObstacleX-=2))
-		if (( lowerObstacleX <= 0 )); then
-			lowerObstacleX=$((maxX-obstacleW))
+		if (( lowerObstacleX < -obstacleW-2)); then
+			lowerObstacleX=$((maxX))
 			randomColor
 			lowerObstacleColor=$?
 		fi
 
-		updateSolidRect $upperObstacleX $upperObstacleY $pUpperObstacleX $upperObstacleY $obstacleW $obstacleH $upperObstacleColor	
+		moveLeftSolidRect $upperObstacleX $upperObstacleY $pUpperObstacleX $upperObstacleY $obstacleW $obstacleH $upperObstacleColor	
 		# updateSolidRect $upperObstacleX $upperObstacleY $pUpperObstacleX $upperObstacleY $obstacleW $obstacleH 2 &
 		pUpperObstacleX=$upperObstacleX
 		((upperObstacleX-=2))
-		if (( upperObstacleX <= 0 )); then
-			upperObstacleX=$((maxX-obstacleW))
+		if (( upperObstacleX < -obstacleW-2)); then
+			upperObstacleX=$((maxX))
 			randomColor
 			upperObstacleColor=$?
 		fi

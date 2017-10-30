@@ -1,3 +1,8 @@
+# Limits of terminal
+minX=1
+minY=1
+maxX=$(tput cols)
+maxY=$(tput lines)
 # intColor colorLetter
 # Maps colors A, B, C... to colors 0, 1, 2...
 intColor(){
@@ -87,10 +92,12 @@ eraseModel(){
 # solidRect x y width height color
 # Draws a solid rectangle at x, y
 solidRect(){
-	x=$1
-	y=$2
-	w=$3
-	h=$4
+	x=$(($1 < minX ? minX : $1))
+	y=$(($2 < mixY ? minY : $2))
+	w=$(($1 < minX ? $3+$1 : $3))
+	w=$((x+w > maxX ? w - ((x+w)-maxX)+1 : w))
+	h=$(($2 < minY ? $4+$2 : $4))
+	h=$((y+h > maxY ? h - ((y+h)-maxY)+1 : h))	
 	color=$5
 	tput setab $color
 	space=""
@@ -121,4 +128,15 @@ updateModel(){
 updateSolidRect(){
 	solidRect $3 $4 $5 $6 $background
 	solidRect $1 $2 $5 $6 $7
+}
+
+moveLeftSolidRect(){
+	dw=$(($3-$1))
+	if ((dw <= 0)); then
+		updateSolidRect $1 $2 $3 $4 $5 $6 $7
+	else
+		endx=$(($1+$5))
+		solidRect $1 $2 $dw $6 $7
+		solidRect $endx $4 $dw $6 $background
+	fi
 }
