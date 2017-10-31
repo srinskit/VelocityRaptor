@@ -6,7 +6,7 @@
 	
 # Some consts
 timeOutTime=0.03
-run=1
+run=0
 # Logic
 main(){
 	# Setup terminal settings
@@ -25,6 +25,7 @@ main(){
 	# echo -en "\e[0;0f$buff\e[$maxY;0f$buff"
 	
 	# Obstacle attributes
+	init(){
 	obstacleW=$((maxX/10))
 	obstacleH=$((obstacleW/2))
 	upperObstacleX=$((maxX/2))
@@ -33,9 +34,8 @@ main(){
 	lowerObstacleX=$((maxX))	
 	lowerObstacleY=$((3*maxY/4-obstacleH/2))	
 	pLowerObstacleX=$lowerObstacleX
-
-	
-
+	}
+	init
 	# Raptor attributes; Width, Height, etc
 	dinoW=7
 	dinoH=5
@@ -74,8 +74,34 @@ main(){
 		echo -ne "\e[$y;"$x"fScore : $score"
 	}
 	
+	x=$((maxX/2))
+	y=$((maxY/2))
+	tput civis -- invisible
+	tput clear
+	echo -ne "\e[$y;"$x"fEnter 1)To start game"
+	echo ""
+	((y=y+1))
+	echo -ne "\e[$y;"$x"f       2)To quit"
+	echo ""
+	((y=y+1))
+	echo -ne "\e[$y;"$x"f       press enter to save choices"
+	read charGot
+	case "$charGot" in 
+			1)
+				run=1
+				;;
+			2)
+			   run=0
+				;;
+	esac
+	tput civis -- invisible
+	tput setab $background
+	tput clear
+	if [ $run -eq 1 ]
+	then
 	drawModel $dinoX $dinoY "$rocketModelV"
 	displayScore
+	fi
 	while test $run -eq 1; do
 		getChar $timeOutTime
 		if [[ "$charGot" != "" ]]; then
@@ -107,7 +133,6 @@ main(){
 			# updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV" 
 			updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV"
 		fi
-		
 		moveLeftSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH $lowerObstacleColor
 		# updateSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH 2 &				
 		pLowerObstacleX=$lowerObstacleX
@@ -118,7 +143,6 @@ main(){
 			lowerObstacleColor=$?
 			displayScore			
 		fi
-
 		moveLeftSolidRect $upperObstacleX $upperObstacleY $pUpperObstacleX $upperObstacleY $obstacleW $obstacleH $upperObstacleColor	
 		# updateSolidRect $upperObstacleX $upperObstacleY $pUpperObstacleX $upperObstacleY $obstacleW $obstacleH 2 &
 		pUpperObstacleX=$upperObstacleX
@@ -142,12 +166,43 @@ main(){
 			# echo $dinoX $dinoW $lowerObstacleX
 			run=0
 		fi
+		if [ $run -eq 0 ]
+		then
+		tput clear
+		displayScore
+		x=$((maxX/2))
+		y=$((maxY/2))
+		echo -ne "\e[$y;"$x"fEnter 1)To replay"
+		echo ""
+		((y=y+1))
+		echo -ne "\e[$y;"$x"f       2)To quit"
+		echo ""
+		((y=y+1))
+		echo -ne "\e[$y;"$x"f       press enter to save choices"
+		read charGot
+		case "$charGot" in 
+				1)
+					run=1
+					init
+					tput clear
+					;;
+				2)
+				run=0
+					;;
+		esac
+		tput civis -- invisible
+		tput clear
+		if [ $run -eq 1 ]
+		then
+		drawModel $dinoX $dinoY "$rocketModelV"
+		fi
+		displayScore
+		fi	
 	done
 	# kill $renderQueuerPid
 	tput cnorm -- normal
 	stty sane
 }
-
 # getChar timeout
 # Saves key in charGot; Blocks for timeout amount of time
 charGot=''
@@ -170,31 +225,4 @@ renderQueuer(){
 		fi
 	done
 }
-
 main
-
-# if ((dinoY < midY)); then
-# 	updateModel $dinoX $downY $dinoX $dinoY "$rocketModelV"
-# 	dinoY=$downY
-# fi
-# if ((dinoY > midY)); then
-# 	updateModel $dinoX $upY $dinoX $dinoY "$rocketModelV"
-# 	dinoY=$upY
-# fi
-# if ((dinoUy!=0)); then
-# 	realDinoY=$(bc <<< "$realDinoY + $dinoUy*$t+$halfG*$t*$t")
-# 	dinoY=$(bc <<< "$realDinoY/1")
-# 	t=$(bc <<< "$t+0.15")
-# 	if ((dinoY > downY)); then
-# 		dinoY=$downY
-# 		realDinoY=$downY
-# 		t=0
-# 		dinoUy=0					
-# 	fi
-# 	if ((pDinoY!=dinoY)); then
-# 		tput clear
-# 		# updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV" 
-# 		sleep 0.005
-# 		drawModel $dinoX $dinoY "$rocketModelV"
-# 	fi
-# fi
