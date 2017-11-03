@@ -34,6 +34,8 @@ main(){
 	lowerObstacleX=$((maxX))	
 	lowerObstacleY=$((3*maxY/4-obstacleH/2))	
 	pLowerObstacleX=$lowerObstacleX
+	score=-1
+	level=0
 	}
 	init
 	# Raptor attributes; Width, Height, etc
@@ -59,8 +61,6 @@ main(){
 	upperObstacleColor=$?
 	# renderQueuer &
 	# renderQueuerPid=$?
-	score=-1
-	level=0
 	obstacleV=$((level+2))
 	displayScore(){
 		((score++))
@@ -94,12 +94,24 @@ main(){
 			   run=0
 				;;
 	esac
+	((y=y+1))
 	tput civis -- invisible
 	tput setab $background
 	tput clear
+	modelSelection(){
+	echo -ne "\e[$y;"$x"f       Enter model number"
+	read Modelnum
+	case $Modelnum in
+	   1)   model="$marioModel"  ;;
+	   2)    model="$rocketModelV" ;;
+	   3)     model="$rocketModel" ;;
+	esac
+	tput clear
+	}
 	if [ $run -eq 1 ]
 	then
-	drawModel $dinoX $dinoY "$rocketModelV"
+	modelSelection
+	drawModel $dinoX $dinoY "$model"
 	displayScore
 	fi
 	while test $run -eq 1; do
@@ -112,6 +124,7 @@ main(){
 				run=0
 				;;
 			"w")
+			    echo -en "\a"
 				if ((dinoY >= upY)); then
 					dinoUy=-2
 				fi
@@ -130,8 +143,8 @@ main(){
 			dinoUy=2
 		fi
 		if ((pDinoY!=dinoY)); then
-			# updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV" 
-			updateModel $dinoX $dinoY $dinoX $pDinoY "$rocketModelV"
+			# updateModel $dinoX $dinoY $dinoX $pDinoY "$model" 
+			updateModel $dinoX $dinoY $dinoX $pDinoY "$model"
 		fi
 		moveLeftSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH $lowerObstacleColor
 		# updateSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH 2 &				
@@ -154,13 +167,13 @@ main(){
 			displayScore						
 		fi
 		((x=dinoX+dinoW))
-		((y=lowerObstacleX+1))
+		((y=lowerObstacleX+2))
 		((z=$lowerObstacleX+$obstacleW))
 		if [ $x -gt $y ] && [ $dinoY -gt $lowerObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -gt $lowerObstacleY ];then
 			# echo $dinoX $dinoW $lowerObstacleX
 			run=0
 		fi
-		((y1=upperObstacleX+1))
+		((y1=upperObstacleX+2))
 		((z=$upperObstacleX+$obstacleW+1))
 		if [ $x -gt $y1 ] && [ $dinoY -lt $upperObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -lt $upperObstacleY ];then
 			# echo $dinoX $dinoW $lowerObstacleX
@@ -180,10 +193,12 @@ main(){
 		((y=y+1))
 		echo -ne "\e[$y;"$x"f       press enter to save choices"
 		read charGot
+		tput clear
 		case "$charGot" in 
 				1)
 					run=1
 					init
+					modelSelection
 					tput clear
 					;;
 				2)
@@ -194,7 +209,8 @@ main(){
 		tput clear
 		if [ $run -eq 1 ]
 		then
-		drawModel $dinoX $dinoY "$rocketModelV"
+		drawModel $dinoX $dinoY "$model"
+		init
 		fi
 		displayScore
 		fi	
