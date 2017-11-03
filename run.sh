@@ -7,6 +7,13 @@
 # Some consts
 timeOutTime=0.03
 run=0
+foo(){
+	# Border
+	for((i=0;i<maxX;++i)); do
+		buff+="#"
+	done
+	echo -en "\e[0;0f$buff\e[$((maxY));0f$buff"
+}
 # Logic
 main(){
 	# Setup terminal settings
@@ -18,42 +25,34 @@ main(){
 	tput setab $background
 	tput clear
 	
-	# # Border
-	# for((i=0;i<maxX;++i)); do
-	# 	buff+="#"
-	# done
-	# echo -en "\e[0;0f$buff\e[$maxY;0f$buff"
 	
-	# Obstacle attributes
+
 	init(){
+		upperObstacleX=$((maxX/2))
+		pUpperObstacleX=$upperObstacleX
+		upperObstacleY=$((maxY/4-obstacleH/2))
+		lowerObstacleX=$((maxX))	
+		lowerObstacleY=$((3*maxY/4-obstacleH/2))	
+		pLowerObstacleX=$lowerObstacleX
+		dinoX=$obstacleW
+		dinoY=$downY
+		pDinoY=$dinoY
+		dinoUy=0	
+		score=-1
+		level=0
+	}
+	# Obstacle attributes
 	obstacleW=$((maxX/10))
 	obstacleH=$((obstacleW/2))
-	upperObstacleX=$((maxX/2))
-	pUpperObstacleX=$upperObstacleX
-	upperObstacleY=$((maxY/4-obstacleH/2))
-	lowerObstacleX=$((maxX))	
-	lowerObstacleY=$((3*maxY/4-obstacleH/2))	
-	pLowerObstacleX=$lowerObstacleX
-	score=-1
-	level=0
-	}
-	init
 	# Raptor attributes; Width, Height, etc
-	dinoW=7
-	dinoH=5
+	dinoW=9
+	dinoH=6
 	# Raptor upperlimit, lowerLimit 
-	upY=$((1*maxY/8))
-	downY=$((maxY-dinoH-1*maxY/8))
+	upY=$((maxY/4-obstacleH/2))
+	upY=$((maxY/8))
+	downY=$((3*maxY/4-obstacleH/2+obstacleH-dinoH))
 	midY=$(((upY+downY)/2))
-	dinoX=$obstacleW
-	dinoY=$downY
-	pDinoY=$dinoY
-	dinoUy=0
-	
-	# realDinoY=$downY
-	# halfG=5
-	# t=0
-
+	init
 	
 	randomColor
 	lowerObstacleColor=$?
@@ -68,51 +67,53 @@ main(){
 			((level++))
 			obstacleV=$((level+2))			
 		fi
-		x=$((maxX/2))
-		y=$((maxY-2))
-		echo -ne "\e[$((y-1));"$x"fLevel : $level"		
-		echo -ne "\e[$y;"$x"fScore : $score"
+		echo -ne "\e[$((maxY-4));"$((maxX/2-10/2-2))"f Level : $level"		
+		echo -ne "\e[$((maxY-3));"$((maxX/2-10/2-2))"f Score : $score"
 	}
-	
-	x=$((maxX/2))
-	y=$((maxY/2))
-	tput civis -- invisible
 	tput clear
-	echo -ne "\e[$y;"$x"fEnter 1)To start game"
-	echo ""
+	foo
+	drawModel $((maxX/2-25)) $((maxY/3)) "$startModel"
+	echo -ne "\e[$((2*maxY/3));"$((maxX/2-20/2-2))"f Hit enter to start!"
+	echo -ne "\e[$((2*maxY/3+1));"$((maxX/2-16/2-2))"f Hit esc to quit!"	
+	read -n1 charGot
+	while [[ "$charGot" != "" ]] && [[ "$charGot" != "" ]]; do
+		read -n1 charGot				
+	done 
+	# Check if esc 
+	if [[ "$charGot" == "" ]]; then	
+		tput clear
+		run=0	
+	else
+		run=1
+	fi
 	((y=y+1))
-	echo -ne "\e[$y;"$x"f       2)To quit"
-	echo ""
-	((y=y+1))
-	echo -ne "\e[$y;"$x"f       press enter to save choices"
-	read charGot
-	case "$charGot" in 
-			1)
-				run=1
-				;;
-			2)
-			   run=0
-				;;
-	esac
-	((y=y+1))
-	tput civis -- invisible
-	tput setab $background
-	tput clear
 	modelSelection(){
-	echo -ne "\e[$y;"$x"f       Enter model number"
-	read Modelnum
-	case $Modelnum in
-	   1)   model="$marioModel"  ;;
-	   2)    model="$rocketModelV" ;;
-	   3)     model="$rocketModel" ;;
-	esac
-	tput clear
+		tput clear
+		# foo
+		drawModel $((maxX/4-5)) $((maxY/4)) "$marioModel"
+		echo -ne "\e[$((maxY/2-5));"$((maxX/4))"f 1"		
+		drawModel $((2*maxX/4-5)) $((maxY/4)) "$rocketModelV"
+		echo -ne "\e[$((maxY/2-5));"$((2*maxX/4))"f 2"				
+		drawModel $((3*maxX/4-5)) $((maxY/4)) "$rocketModel"
+		echo -ne "\e[$((maxY/2-5));"$((3*maxX/4))"f 3"				
+		echo -ne "\e[$((3*maxY/4));"$((maxX/2-20/2))"f Enter model number"
+		read -n1 Modelnum
+		case $Modelnum in
+			1) model="$marioModel"   ;;
+			2) model="$rocketModelV" ;;
+			3) model="$rocketModel"  ;;
+			"") run=0;;
+			*) model="$rocketModelV" ;;
+		esac
 	}
-	if [ $run -eq 1 ]
-	then
-	modelSelection
-	drawModel $dinoX $dinoY "$model"
-	displayScore
+	if [ $run -eq 1 ]; then
+		modelSelection
+		tput clear
+		# foo	
+		if [ $run -eq 1 ]; then
+			drawModel $dinoX $dinoY "$model"
+			displayScore
+		fi
 	fi
 	while test $run -eq 1; do
 		getChar $timeOutTime
@@ -120,7 +121,7 @@ main(){
 			sleep $timeOutTime
 		fi
 		case "$charGot" in 
-			"q")
+			"")
 				run=0
 				;;
 			"w")
@@ -166,53 +167,50 @@ main(){
 			upperObstacleColor=$?
 			displayScore						
 		fi
+		# if (( dinoX + dinoW >= lowerObstacleX && dinoX <= lowerObstacleX + obstacleW && dinoY + dinoH >= lowerObstacleY && dinoY <= lowerObstacleY + obstacleH )); then
+		# 	run=0
+		# fi
+		# if (( dinoX + dinoW >= upperObstacleX && dinoX <= upperObstacleX + obstacleW && dinoY + dinoH >= upperObstacleY && dinoY <= upperObstacleY + obstacleH )); then
+		# 	run=0
+		# fi
+
 		((x=dinoX+dinoW))
 		((y=lowerObstacleX+2))
-		((z=$lowerObstacleX+$obstacleW))
-		if [ $x -gt $y ] && [ $dinoY -gt $lowerObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -gt $lowerObstacleY ];then
-			# echo $dinoX $dinoW $lowerObstacleX
+		((z=$lowerObstacleX+$obstacleW+1))
+		if [ $x -gt $y ] && [ $dinoY -gt $lowerObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -gt $lowerObstacleY ]; then
 			run=0
 		fi
+		((x=dinoX+dinoW))		
 		((y1=upperObstacleX+2))
 		((z=$upperObstacleX+$obstacleW+1))
 		if [ $x -gt $y1 ] && [ $dinoY -lt $upperObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -lt $upperObstacleY ];then
-			# echo $dinoX $dinoW $lowerObstacleX
-			run=0
+			run=0			
 		fi
-		if [ $run -eq 0 ]
-		then
-		tput clear
-		displayScore
-		x=$((maxX/2))
-		y=$((maxY/2))
-		echo -ne "\e[$y;"$x"fEnter 1)To replay"
-		echo ""
-		((y=y+1))
-		echo -ne "\e[$y;"$x"f       2)To quit"
-		echo ""
-		((y=y+1))
-		echo -ne "\e[$y;"$x"f       press enter to save choices"
-		read charGot
-		tput clear
-		case "$charGot" in 
-				1)
-					run=1
-					init
-					modelSelection
-					tput clear
-					;;
-				2)
-				run=0
-					;;
-		esac
-		tput civis -- invisible
-		tput clear
-		if [ $run -eq 1 ]
-		then
-		drawModel $dinoX $dinoY "$model"
-		init
-		fi
-		displayScore
+		if [ $run -eq 0 ]; then
+			tput clear
+			displayScore
+			drawModel $((maxX/2-20)) $((maxY/3)) "$endModel"
+			echo -ne "\e[$((2*maxY/3));"$((maxX/2-22/2-2))"f Hit enter to replay!"
+			echo -ne "\e[$((2*maxY/3+1));"$((maxX/2-18/2-2))"f Hit esc to quit!"		
+			read -n1 charGot
+			while [[ "$charGot" != "" ]] && [[ "$charGot" != "" ]]; do
+				read -n1 charGot				
+			done 
+			tput clear
+			# Check if esc 
+			if [[ "$charGot" == "" ]]; then
+				run=0	
+			else
+				run=1
+				init
+				modelSelection
+			fi
+			tput clear
+			if [ $run -eq 1 ]; then
+				init
+				drawModel $dinoX $dinoY "$model"
+				displayScore
+			fi
 		fi	
 	done
 	# kill $renderQueuerPid
@@ -241,4 +239,5 @@ renderQueuer(){
 		fi
 	done
 }
+
 main
