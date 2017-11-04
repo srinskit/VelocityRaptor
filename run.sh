@@ -7,7 +7,7 @@
 # Some consts
 timeOutTime=0.03
 run=0
-
+sound=1
 quitKey="q"
 continueKey=""
 # Logic
@@ -133,7 +133,7 @@ main(){
 			    if ((dinoY >= upY && dinoUy != -2)); then
 					dinoUy=-2
 					# Possible bug; pid already assigned to other process?
-					if ((dinoY >upY)); then
+					if ((sound==1 && dinoY >upY)); then
 						kill -0 $soundpid 2> /dev/null
 						if ((soundpid==-1 || $? == 1)); then
 							paplay sounds/jump.wav &	
