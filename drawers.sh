@@ -140,3 +140,12 @@ moveLeftSolidRect(){
 		solidRect $endx $4 $dw $6 $background
 	fi
 }
+
+# Border
+drawBorder(){
+	buff=""
+	for((i=0;i<maxX;++i)); do
+		buff+="#"
+	done
+	echo -en "\e[0;0f$buff\e[$((maxY));0f$buff"
+}
