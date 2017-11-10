@@ -1,6 +1,6 @@
 # Velocity raptor
 ## About the game:
-<span>This is a game developed purely in bash without using any external libraries.This was</span>
+<span>This is a game developed purely in bash without using any external libraries.</span>
 ## Rule(Aim) of the game:
 <span>The aim of the game is simple,"Avoid obstacles!"</span>
 <ul>
