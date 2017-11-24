@@ -7,9 +7,15 @@
 # Some consts
 timeOutTime=0.03
 run=0
-sound=1
+sound=0
 quitKey="q"
 continueKey=""
+WalkMode=0
+JumpMode=1
+JumpLevel=2
+GodMode=2
+GodLevel=4
+
 # Logic
 main(){
 	# Setup terminal settings
@@ -40,6 +46,10 @@ main(){
 		dinoY=$downY
 		pDinoY=$dinoY
 		dinoUy=0	
+		gameMode=$WalkMode		
+		gameMode=$GodMode
+		gameMode=$JumpMode	
+		nextGameMode=$gameMode	
 	}
 
 	obstacleW=$((maxX/10))
@@ -61,8 +71,14 @@ main(){
 		if ((score%5==0)); then		
 			((level++))
 			obstacleV=$((level+2))			
-		fi
-		echo -ne "\e[$((maxY-4));"$((maxX/2-10/2-2))"f Level : $level"		
+			if ((level>=GodLevel)); then
+				nextGameMode=$GodMode
+			elif ((level>=JumpLevel)); then
+				nextGameMode=$JumpMode
+			else
+				nextGameMode=$WalkMode
+			fi
+		fi	
 		echo -ne "\e[$((maxY-3));"$((maxX/2-10/2-2))"f Score : $score"
 	}
 
@@ -130,7 +146,7 @@ main(){
 			"$quitKey")
 				run=0 ;;
 			"w")
-			    if ((dinoY >= upY && dinoUy != -2)); then
+				if ((dinoY >= upY && dinoUy != -2)); then
 					dinoUy=-2
 					# Possible bug; pid already assigned to other process?
 					if ((sound==1 && dinoY >upY)); then
@@ -140,22 +156,60 @@ main(){
 							soundpid=$!
 						fi
 					fi
-				fi ;;
-			"s") ;;
+				fi
+				;;
+			"s")
+				if ((gameMode == WalkMode)); then
+					doNothing=1
+				else
+					dinoUy=2
+				fi 
+			;;
 		esac
 		pDinoY=$dinoY
-		((dinoY+=dinoUy))
-		if ((dinoY > downY)); then
-			dinoY=$downY		
-			dinoUy=0
+		if ((gameMode == WalkMode)); then
+			((dinoY+=dinoUy))
+			if ((dinoY > downY)); then
+				dinoY=$downY		
+				dinoUy=0
+			fi
+			if ((dinoY < upY)); then
+				dinoY=$upY
+				dinoUy=2
+			fi
+		elif ((gameMode == JumpMode)); then
+			if ((dinoUy > 0)); then
+				dinoY=$(( dinoY == midY ? downY : midY ))		
+				dinoUy=0
+			fi
+			if ((dinoUy < 0)); then
+				dinoY=$(( dinoY == midY ? upY : midY ))						
+				dinoUy=0
+			fi
+		elif ((gameMode == GodMode)); then
+			if ((dinoUy > 0)); then
+				dinoY=$downY		
+				dinoUy=0
+			fi
+			if ((dinoUy < 0)); then
+				dinoY=$upY
+				dinoUy=0
+			fi
 		fi
-		if ((dinoY < upY)); then
-			dinoY=$upY
-			dinoUy=2
-		fi
-		if ((pDinoY!=dinoY)); then
-			# updateModel $dinoX $dinoY $dinoX $pDinoY "$model" 
-			updateModel $dinoX $dinoY $dinoX $pDinoY "$model"
+		if ((dinoUy==0 && nextGameMode!=gameMode)); then
+			gameMode=$nextGameMode
+			if ((gameMode==WalkMode)); then
+				modeName="WALK"
+			elif ((gameMode==JumpMode)); then
+				modeName="JUMP"			
+			elif ((gameMode==GodMode)); then
+				modeName="GOD "
+			fi
+			echo -ne "\e[$((maxY-1));"$((maxX/2-10/2-1))"f$modeName MODE"
+			clearTitle(){
+				doNothing=1
+			}
+			clearTitle
 		fi
 		moveLeftSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH $lowerObstacleColor
 		if (( dinoX + dinoW >= lowerObstacleX && dinoX <= lowerObstacleX+obstacleW && dinoY + dinoH >= lowerObstacleY && dinoY <= lowerObstacleY+obstacleH )); then
@@ -196,11 +250,13 @@ main(){
 		# if [ $x -gt $y1 ] && [ $dinoY -lt $upperObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -lt $upperObstacleY ];then
 		# 	run=0			
 		# fi
-
+		if ((pDinoY!=dinoY)); then
+			updateModel $dinoX $dinoY $dinoX $pDinoY "$model"
+		fi
 		if [ $run -eq 0 ]; then
 			echo -ne "\e[$((maxY/2));"$((maxX/2-10/2-2))"fGAME OVER!"			
 			read -n1 charGot
-			while [[ "$charGot" != "$continueKey" ]]; do
+			while  [[ "$charGot" != "$quitKey" ]] && [[ "$charGot" != "$continueKey" ]]; do
 				read -n1 charGot				
 			done
 			tput clear
