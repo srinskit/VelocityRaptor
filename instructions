@@ -1,0 +1,17 @@
+												Velocity raptor
+	About the game:
+		This is a game developed purely in bash without using any external libraries.
+	Rule(Aim) of the game:
+		1.The aim of the game is simple,"Avoid obstacles!"
+		2.In this game the more the player avoid obstacles,the more points he gets
+		3.As the player's points increases the speed of the obstacles increase,making it more difficult than the previous level
+		4.Many models are available,and the player can choose anyone of them according to their need.
+		5.Models have different attributes attatched to them like width,height,speed of ascent and descent,etc..
+		6.Hence,while choosing the model the player  can make appropriate choices.
+	Basic Contols:
+		"model#":The model number shown on the screen can be pressed to choose a particular model.
+		"Enter":Press Enter to start the game,or "q" to quit.</li>
+		"q":Quits the game.
+	How to run the game
+		Use "./run.sh" to run the game.
+												Happy Gaming!
