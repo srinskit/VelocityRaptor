@@ -83,6 +83,12 @@ main(){
 	fi
 	modelSelection(){
 		tput clear
+		cat instructions
+		echo -ne "\e[$((maxY-4));"$((maxX/2-10/2-2))"f Press e to run game"
+		read -n1 ins
+		if [ $ins=="e" ]
+		then
+		tput clear
 		drawBorder		
 		drawModel $((maxX/4-dinoW/2)) $((maxY/4)) "$marioModel"
 		echo -ne "\e[$((maxY/2-3));"$((maxX/4))"f1"		
@@ -112,6 +118,9 @@ main(){
 				dinoW=9
 				;;
 		esac
+		else
+		run=0
+		fi
 	}
 	if [ $run -eq 1 ]; then
 		modelSelection
