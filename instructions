@@ -25,5 +25,5 @@
 						"Enter":Press Enter to start the game,or "q" to quit.
 						"q":Quits the game.
 					How to run the game
-						Use "./run.sh" to run the game.
+						Use "./main.sh" to run the game.
 													Happy Gaming!
