@@ -1,69 +1,45 @@
-#!/bin/bash
-# Includes
-. drawers.sh
-. models.sh
-. queue.sh
-	
 # Some consts
 timeOutTime=0.03
-run=0
-sound=0
-quitKey="q"
-continueKey=""
 WalkMode=0
 JumpMode=1
 JumpLevel=2
 GodMode=2
 GodLevel=4
-
+jumpCounter=0
 # Logic
-main(){
-	# Setup terminal settings
-	backgroundLetter=Q
-	intColor $backgroundLetter
-	background=$?
-	stty -echo
-	tput civis -- invisible
-	tput setab $background
+runGame(){
+	sound=1	
 	tput clear
-
-	# Physics vars
-	init(){
-		score=-1
-		level=0
-		upperObstacleX=$((maxX/2))
-		pUpperObstacleX=$upperObstacleX
-		upperObstacleY=$((maxY/4-obstacleH/2))
-		lowerObstacleX=$((maxX))	
-		lowerObstacleY=$((3*maxY/4-obstacleH/2))	
-		pLowerObstacleX=$lowerObstacleX
-		randomColor
-		lowerObstacleColor=$?
-		randomColor	
-		upperObstacleColor=$?
-		obstacleV=$((level+2))		
-		dinoX=$obstacleW
-		dinoY=$downY
-		pDinoY=$dinoY
-		dinoUy=0	
-		gameMode=$WalkMode		
-		gameMode=$GodMode
-		gameMode=$JumpMode	
-		nextGameMode=$gameMode	
-	}
-
 	obstacleW=$((maxX/10))
 	obstacleH=$((obstacleW/2))
 	dinoW=9
 	dinoH=6
 	
-	upY=$((maxY/4-obstacleH/2))
-	downY=$((3*maxY/4-obstacleH/2+obstacleH-dinoH))
-	midY=$(((upY+downY)/2))
-	init
+	midY=$((maxY/2))
+	upY=$((midY-obstacleH-5))
+	downY=$((midY+obstacleH+5))
+	score=-1
+	level=0
+	upperObstacleX=$((maxX/2))
+	pUpperObstacleX=$upperObstacleX
+	upperObstacleY=$upY
+	lowerObstacleX=$((maxX))	
+	lowerObstacleY=$((downY-obstacleH))	
+	pLowerObstacleX=$lowerObstacleX
+	randomColor
+	lowerObstacleColor=$?
+	randomColor	
+	upperObstacleColor=$?
+	obstacleV=$((level+2))		
+	dinoX=$obstacleW
+	dinoY=$((downY-dinoH))
+	pDinoY=$dinoY
+	dinoUy=0	
+	gameMode=$WalkMode		
+	gameMode=$GodMode
+	gameMode=$JumpMode	
+	nextGameMode=$gameMode	
 		
-	# renderQueuer &
-	# renderQueuerPid=$?
 	soundpid=-1
 
 	displayScore(){
@@ -79,73 +55,12 @@ main(){
 				nextGameMode=$WalkMode
 			fi
 		fi	
+		echo -ne "\e[$((maxY-4));"$((maxX/2-10/2-2))"f Level : $level"		
 		echo -ne "\e[$((maxY-3));"$((maxX/2-10/2-2))"f Score : $score"
 	}
-
-	tput clear
-	drawBorder
-	drawModel $((maxX/2-25)) $((maxY/3)) "$startModel"
-	echo -ne "\e[$((2*maxY/3));"$((maxX/2-20/2-2))"f Hit space to start!"
-	echo -ne "\e[$((2*maxY/3+1));"$((maxX/2-16/2-2))"f Hit q to quit!"	
-	read -n1 charGot
-	while [[ "$charGot" != "$quitKey" ]] && [[ "$charGot" != "$continueKey" ]]; do
-		read -n1 charGot				
-	done 
-	if [[ "$charGot" == "$quitKey" ]]; then	
-		tput clear
-		run=0	
-	else
-		run=1
-	fi
-	modelSelection(){
-		tput clear
-		cat instructions
-		echo -ne "\e[$((maxY-4));"$((maxX/2-10/2-2))"f Press e to run game"
-		read -n1 ins
-		if [ $ins=="e" ]
-		then
-		tput clear
-		drawBorder		
-		drawModel $((maxX/4-dinoW/2)) $((maxY/4)) "$marioModel"
-		echo -ne "\e[$((maxY/2-3));"$((maxX/4))"f1"		
-		drawModel $((2*maxX/4-9/2)) $((maxY/4)) "$rocketModelV"
-		echo -ne "\e[$((maxY/2-3));"$((2*maxX/4))"f2"				
-		drawModel $((3*maxX/4-5)) $((maxY/4)) "$rocketModel"
-		echo -ne "\e[$((maxY/2-3));"$((3*maxX/4))"f3"				
-		echo -ne "\e[$((2*maxY/3));"$((maxX/2-14/2))"fSelect Model!"
-		read -n1 Modelnum
-		case $Modelnum in
-			1)
-				model="$marioModel"		
-				dinoH=7
-				dinoW=12
-				;;
-			3)
-				model="$rocketModel"
-				dinoH=7
-				dinoW=12
-				;;
-			"$quitKey")
-				run=0
-				;;
-			*)
-				model="$rocketModelV"
-				dinoH=6
-				dinoW=9
-				;;
-		esac
-		else
-		run=0
-		fi
-	}
-	if [ $run -eq 1 ]; then
-		modelSelection
-		tput clear
-		if [ $run -eq 1 ]; then
-			drawModel $dinoX $dinoY "$model"
-			displayScore
-		fi
-	fi
+	
+	drawModel $dinoX $dinoY "$raptor"
+	displayScore	
 	while test $run -eq 1; do
 		getChar $timeOutTime
 		if [[ "$charGot" != "" ]]; then
@@ -155,10 +70,10 @@ main(){
 			"$quitKey")
 				run=0 ;;
 			"w")
-				if ((dinoY >= upY && dinoUy != -2)); then
+				if ((dinoY > upY && dinoUy != -2)); then
 					dinoUy=-2
 					# Possible bug; pid already assigned to other process?
-					if ((sound==1 && dinoY >upY)); then
+					if ((sound==1)); then
 						kill -0 $soundpid 2> /dev/null
 						if ((soundpid==-1 || $? == 1)); then
 							paplay sounds/jump.wav &	
@@ -168,36 +83,49 @@ main(){
 				fi
 				;;
 			"s")
-				if ((gameMode == WalkMode)); then
-					doNothing=1
-				else
+				if ((dinoY + dinoH < downY && dinoUy != 2)); then
 					dinoUy=2
-				fi 
-			;;
+					# Possible bug; pid already assigned to other process?
+					if ((sound==1)); then
+						kill -0 $soundpid 2> /dev/null
+						if ((soundpid==-1 || $? == 1)); then
+							paplay sounds/jump.wav &	
+							soundpid=$!
+						fi
+					fi
+				fi
+				;;
 		esac
 		pDinoY=$dinoY
 		if ((gameMode == WalkMode)); then
 			((dinoY+=dinoUy))
-			if ((dinoY > downY)); then
-				dinoY=$downY		
+			if ((dinoY + dinoH > downY)); then
+				dinoY=$((downY-dinoH))
 				dinoUy=0
 			fi
 			if ((dinoY < upY)); then
 				dinoY=$upY
-				dinoUy=2
+				dinoUy=0
 			fi
 		elif ((gameMode == JumpMode)); then
-			if ((dinoUy > 0)); then
-				dinoY=$(( dinoY == midY ? downY : midY ))		
-				dinoUy=0
-			fi
-			if ((dinoUy < 0)); then
-				dinoY=$(( dinoY == midY ? upY : midY ))						
-				dinoUy=0
+			if ((dinoUy != 0)); then
+				((jumpCounter++))
+				if ((jumpCounter > 10)); then
+					if ((dinoUy > 0)); then
+						dinoY=$((downY-dinoH))
+					fi
+					if ((dinoUy < 0)); then					
+						dinoY=$((upY))					
+					fi
+					dinoUy=0
+					jumpCounter=0
+				else
+					dinoY=$((midY-dinoH/2))
+				fi
 			fi
 		elif ((gameMode == GodMode)); then
 			if ((dinoUy > 0)); then
-				dinoY=$downY		
+				dinoY=$((downY-dinoH))
 				dinoUy=0
 			fi
 			if ((dinoUy < 0)); then
@@ -222,11 +150,11 @@ main(){
 		fi
 		moveLeftSolidRect $lowerObstacleX $lowerObstacleY $pLowerObstacleX $lowerObstacleY $obstacleW $obstacleH $lowerObstacleColor
 		if (( dinoX + dinoW >= lowerObstacleX && dinoX <= lowerObstacleX+obstacleW && dinoY + dinoH >= lowerObstacleY && dinoY <= lowerObstacleY+obstacleH )); then
-			drawModel $dinoX $dinoY "$model"
+			drawModel $dinoX $dinoY "$raptor"
 			run=0
 		fi
 		if (( dinoX + dinoW >= upperObstacleX && dinoX <= upperObstacleX+obstacleW && dinoY + dinoH >= upperObstacleY && dinoY <= upperObstacleY+obstacleH )); then
-			drawModel $dinoX $dinoY "$model"
+			drawModel $dinoX $dinoY "$raptor"
 			run=0
 		fi
 		pLowerObstacleX=$lowerObstacleX
@@ -247,20 +175,8 @@ main(){
 			displayScore						
 		fi
 
-		# ((x=dinoX+dinoW))
-		# ((y=lowerObstacleX+2))
-		# ((z=$lowerObstacleX+$obstacleW+1))
-		# if [ $x -gt $y ] && [ $dinoY -gt $lowerObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -gt $lowerObstacleY ]; then
-		# 	run=0
-		# fi
-		# ((x=dinoX+dinoW))		
-		# ((y1=upperObstacleX+2))
-		# ((z=$upperObstacleX+$obstacleW+1))
-		# if [ $x -gt $y1 ] && [ $dinoY -lt $upperObstacleY ] || [ $dinoX -gt $z ] && [ $dinoY -lt $upperObstacleY ];then
-		# 	run=0			
-		# fi
 		if ((pDinoY!=dinoY)); then
-			updateModel $dinoX $dinoY $dinoX $pDinoY "$model"
+			updateModel $dinoX $dinoY $dinoX $pDinoY "$raptor"
 		fi
 		if [ $run -eq 0 ]; then
 			echo -ne "\e[$((maxY/2));"$((maxX/2-10/2-2))"fGAME OVER!"			
@@ -268,35 +184,8 @@ main(){
 			while  [[ "$charGot" != "$quitKey" ]] && [[ "$charGot" != "$continueKey" ]]; do
 				read -n1 charGot				
 			done
-			tput clear
-			drawBorder
-			displayScore
-			drawModel $((maxX/2-20)) $((maxY/3)) "$endModel"
-			echo -ne "\e[$((2*maxY/3));"$((maxX/2-22/2-2))"f Hit space to replay!"
-			echo -ne "\e[$((2*maxY/3+1));"$((maxX/2-16/2-2))"f Hit q to quit!"	
-			read -n1 charGot
-			while [[ "$charGot" != "$quitKey" ]] && [[ "$charGot" != "$continueKey" ]]; do
-				read -n1 charGot				
-			done 
-			tput clear
-			if [[ "$charGot" == "$quitKey" ]]; then
-				run=0	
-			else
-				run=1
-				init
-				modelSelection
-			fi
-			tput clear
-			if [ $run -eq 1 ]; then
-				init
-				drawModel $dinoX $dinoY "$model"
-				displayScore
-			fi
 		fi	
 	done
-	# kill $renderQueuerPid
-	tput cnorm -- normal
-	stty sane
 }
 # getChar timeout
 # Saves key in charGot; Blocks for timeout amount of time
@@ -320,5 +209,3 @@ renderQueuer(){
 		fi
 	done
 }
-
-main
