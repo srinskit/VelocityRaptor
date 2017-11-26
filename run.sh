@@ -2,13 +2,12 @@
 timeOutTime=0.03
 WalkMode=0
 JumpMode=1
-JumpLevel=2
+JumpLevel=3
 GodMode=2
-GodLevel=4
+GodLevel=6
 jumpCounter=0
 # Logic
 runGame(){
-	sound=1	
 	tput clear
 	obstacleW=$((maxX/10))
 	obstacleH=$((obstacleW/2))

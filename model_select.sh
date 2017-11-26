@@ -12,12 +12,12 @@ modelSelection(){
     read -n1 Modelnum
     case $Modelnum in
         1)
-            model="$marioModel"		
+            raptor="$marioModel"		
             dinoH=7
             dinoW=12
             ;;
         3)
-            model="$rocketModel"
+            raptor="$rocketModel"
             dinoH=7
             dinoW=12
             ;;
@@ -25,7 +25,7 @@ modelSelection(){
             run=0
             ;;
         *)
-            model="$rocketModelV"
+            raptor="$rocketModelV"
             dinoH=6
             dinoW=9
             ;;

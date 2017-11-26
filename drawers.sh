@@ -17,31 +17,7 @@ randomColor(){
 }
 # drawModel x y model
 # Draws model model
-drawModelOld(){
-	x=$1
-	xi=$x
-	yi=$2
-	model=$3
-	buff=""
-	data=""
-	for ((i=0; i<${#model}; i++)); do
-		color="${model:$i:1}"
-		if [[ "$color" == "." ]]; then
-			((yi++))
-			((xi=x))
-		else
-			if [[ "$color" == " " ]]; then
-				((xi++))
-				continue
-			fi
-			intColor $color
-			tput setab $?
-			echo -ne "\033[$yi;"$xi"f "
-			((xi++))
-		fi
-	done 
-	tput setab $background
-}
+# Todo ignore initial spaces
 drawModel(){
 	x=$1
 	yi=$2
@@ -85,7 +61,6 @@ eraseModel(){
 			spaces+=" "
 		fi
 	done
-	# buff+="\e[48;5;$background""m"	
 	echo -ne "$buff"
 }
 
@@ -114,10 +89,6 @@ solidRect(){
 
 # updateModel x y prevx prevy model
 # Erases previous model and draws new one
-updateModelOld(){
-	eraseModelOld $3 $4 "$5"
-	drawModelOld $1 $2 "$5"
-}
 updateModel(){
 	eraseModel $3 $4 "$5"
 	drawModel $1 $2 "$5"
@@ -132,7 +103,7 @@ updateSolidRect(){
 
 moveLeftSolidRect(){
 	dw=$(($3-$1))
-	if ((dw <= 0)); then
+	if ((dw >= $5 || dw <= 0)); then
 		updateSolidRect $1 $2 $3 $4 $5 $6 $7
 	else
 		endx=$(($1+$5))

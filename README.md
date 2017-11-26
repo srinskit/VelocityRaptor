@@ -1,5 +1,8 @@
+<pre>
 # Velocity raptor
+</pre>
 ## About the game:
+<br>
 <span>This is a game developed purely in bash without using any external libraries.</span>
 ## Rule(Aim) of the game:
 <span>The aim of the game is simple,"Avoid obstacles!"</span>
@@ -21,4 +24,4 @@
 <li>On the top corner you will find an option to clone this repository.Click the option and copy the https link.</li><li>Once in your terminal type in "git clone copied_link".(This assumes that you have installed git).If not https://git-scm.com/download/linux .</li>
 <li>Once you have cloned our repository you will find a folder named "Velocity_Raptor".Type in "cd Velocity_Raptor" in your terminal.</li><li>Then run the game using "./run.sh"</li>
 </ul>
-<h2>Happy Gaming!:smiley:</h2>
+<h2>Happy Gaming!</h2>
