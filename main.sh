@@ -21,6 +21,8 @@ sound=1
 quitKey="q"
 updateKey="u"
 playKey="p"
+#pausekey added
+pausekey="p"
 readmeKey="r"
 instKey="i"
 continueKey=""
