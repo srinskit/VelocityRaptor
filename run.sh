@@ -94,6 +94,16 @@ runGame(){
 					fi
 				fi
 				;;
+			$pausekey)
+			pause=1
+			while [ $pause -eq 1 ]
+			do
+			read -n1 pause_char
+			if [ $pause_char=="p" ]
+			then
+			pause=0
+			fi
+			done
 		esac
 		pDinoY=$dinoY
 		if ((gameMode == WalkMode)); then
