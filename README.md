@@ -1,27 +1,33 @@
 
 # Velocity raptor
-## About the game:
-<br>
-This is a game developed purely in bash without using any external libraries.
+This is a game developed purely in BASH. Checkout the demo at the bottom.
 
-## Rule(Aim) of the game:
-<span>The aim of the game is simple,"Avoid obstacles!"</span>
+The aim of the game is simple. Avoid obstacles!
 
-* In this game the more the player avoid obstacles,the more points he gets
-* As the player's points increases the speed of the obstacles increase,making it more difficult than the previous level
+* In this game the more the player avoid obstacles, the more points they get.
+* As the player's points increases the speed of the obstacles increase,making it more difficult than the previous level.
 * Many models are available,and the player can choose anyone of them according to their need.
-* Models have different attributes attatched to them like width,height,speed of ascent and descent,etc...Hence,while choosing the model the player  can make appropriate choices.
+* Models have different attributes attached to them like width,height,speed of ascent and descent,etc. Hence, while choosing the model the player can make appropriate choices.
 
-## Basic Contols:
+## Contols
 
-* `model# `:  The model number shown on the screen can be pressed to choose a particular model.
-* `Enter` : Press Enter to start the game,or "q" to quit.</li>
-* `q`: Quits the game.
-## How to run the game
+* `w`: Moves player up
+* `s`: Moves player down
+* `p`: Pause game
+* `q`: Quits game
 
-* On the top corner you will find an option to clone this repository.Click the option and copy the https link.
-* Once in your terminal type in 
-```git clone <copied_link> ```.<br>*This assumes that you have installed git*.<br>If not [download from this link](https://git-scm.com/download/linux).
-* Once you have cloned our repository you will find a folder named `Velocity_Raptor`.Type in `cd Velocity_Raptor` in your terminal.
-* Then run the game using `./run.sh`
-## Happy gaming!
+## Setup
+
+* Clone the repository
+* Run `main.sh` in a fullscreen terminal
+
+## Demo
+![Start screen screenshot](demo/Screenshot&#32;from&#32;2019-07-22&#32;19-30-23.png "Start screen")
+
+![Model selection screenshot](demo/Screenshot&#32;from&#32;2019-07-22&#32;19-30-32.png "Player model selection")
+
+![Walk mode screenshot](demo/Screenshot&#32;from&#32;2019-07-22&#32;19-30-43.png "Walk mode")
+
+![Jump mode screenshot](demo/Screenshot&#32;from&#32;2019-07-22&#32;19-32-05.png "Jump mode")
+
+![Game over screenshot](demo/Screenshot&#32;from&#32;2019-07-22&#32;19-32-13.png "Game over")
