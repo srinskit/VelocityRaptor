@@ -1,5 +1,5 @@
 
-# Velocity raptor
+# Velocity Raptor
 This is a game developed purely in BASH. Checkout the demo at the bottom.
 
 The aim of the game is simple. Avoid obstacles!
